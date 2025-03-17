@@ -2,8 +2,11 @@ import asyncio
 import os
 from urllib.parse import urlparse
 
+import typer
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 from crawl4ai.deep_crawling import BFSDeepCrawlStrategy, DomainFilter, FilterChain
+
+app = typer.Typer()
 
 
 class FactusDocCrawler:
@@ -89,11 +92,25 @@ class FactusDocCrawler:
         print(f"Crawling completed. Processed {count} pages.")
 
 
-async def main():
-    start_url = "https://developers.factus.com.co/"
-    crawler = FactusDocCrawler(start_url)
-    await crawler.crawl()
+@app.command()
+def crawl(
+    url: str = typer.Option(
+        ..., prompt="Enter the URL to crawl", help="The URL to start crawling from"
+    ),
+    output_dir: str = typer.Option(
+        "./data/factus_docs", help="Directory to save the crawled content"
+    ),
+):
+    """
+    Crawl a website and save its content as markdown files.
+    """
+
+    async def run_crawler():
+        crawler = FactusDocCrawler(url, output_dir)
+        await crawler.crawl()
+
+    asyncio.run(run_crawler())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    app()
